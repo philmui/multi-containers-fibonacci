@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t philmui/client-react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true philmui/client-react-test npm test
+
+after_success:
+  - docker build -t philmui/multi-client ./client
+  - docker build -t philmui/multi-nginx ./nginx
+  - docker build -t philmui/multi-server ./server
+  - docker build -t philmui/multi-worker ./worker
+
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # take these images & push to docker hub
+  - docker push philmui/multi-client
+  - docker push philmui/multi-nginx
+  - docker push philmui/multi-server
+  - docker push philmui/multi-worker
